@@ -2,6 +2,8 @@ import pandas as pd  # Import pandas library for data manipulation
 import csv  # Import csv library for handling CSV files
 from datetime import datetime  # Import datetime for date handling
 from data_entry import *  # Custom module for user input handling
+import matplotlib.pyplot as plt
+
 
 class CSV:
     # Define the CSV file and column structure
@@ -80,6 +82,31 @@ def add():
     CSV.add_entry(date, amount, category, description)
 
 
+def plot_transactions(df):
+    """Plot income and expenses over time."""
+    df.set_index('date', inplace=True)
+
+    income_df = df[df["category"] == "Income"].resample("D").sum().reindex(df.index, fill_value=0)
+    expense_df = df[df["category"] == "Expense"].resample("D").sum().reindex(df.index, fill_value=0)
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(income_df.index, income_df['amount'], label='Income', color='g')
+    plt.plot(expense_df.index, expense_df['amount'], label='Expense', color='r')
+    plt.xlabel("Date")
+    plt.ylabel("Amount")
+    plt.title("Income and Expense Over Time")
+    plt.legend()
+    plt.grid(True)
+
+    # Ask user whether to save or show the plot
+    choice = input("Do you want to save the plot? (y/n): ").lower()
+    if choice == "y":
+        plt.savefig("income_expense_plot.png")
+        print("Plot saved as 'income_expense_plot.png'.")
+    else:
+        plt.show()
+
+
 def main():
     """Main program loop to handle user choices."""
     while True:
@@ -93,7 +120,9 @@ def main():
         elif choice == "2":
             start_date = get_date("Enter the start date (dd-mm-yyyy): ")
             end_date = get_date("Enter the end date (dd-mm-yyyy): ")
-            CSV.get_transactions(start_date, end_date)
+            filtered_df = CSV.get_transactions(start_date, end_date)
+            if not filtered_df.empty:
+                plot_transactions(filtered_df)
         elif choice == "3":
             print("Exiting...")
             break
